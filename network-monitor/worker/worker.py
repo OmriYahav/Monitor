@@ -4,7 +4,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1] / "backend"))
 from sqlalchemy import select
 from app.db.session import SessionLocal, Base, engine
-from app.models.models import Device, DeviceCheck
+from app.models.models import Device, DeviceCheck, Metric
 from alert_evaluator import evaluate_device
 from ping_poller import ping
 
@@ -23,6 +23,9 @@ def poll_once() -> None:
                 result = ping(device.ip_address)
                 now = datetime.now(timezone.utc)
                 db.add(DeviceCheck(device_id=device.id, checked_at=now, success=result.success, latency_ms=result.latency_ms, error_message=result.error_message))
+                db.add(Metric(time=now, device_id=device.id, metric_name="ping_success", metric_value=1 if result.success else 0, unit="bool", tags={}))
+                if result.latency_ms is not None:
+                    db.add(Metric(time=now, device_id=device.id, metric_name="ping_latency_ms", metric_value=result.latency_ms, unit="ms", tags={}))
                 device.last_check = now; device.status = "online" if result.success else "offline"
                 if result.success: device.last_seen = now
                 evaluate_device(db, device); db.commit()

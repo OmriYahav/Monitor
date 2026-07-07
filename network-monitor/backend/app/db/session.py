@@ -1,9 +1,8 @@
-import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from app.core import get_settings
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg://monitor:monitor@postgres:5432/monitor")
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+engine = create_engine(get_settings().database_url, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 class Base(DeclarativeBase):

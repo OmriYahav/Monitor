@@ -1,2 +1,8 @@
-export const API = process.env.BACKEND_URL || 'http://localhost:8000';
-export async function api(path:string, init?:RequestInit){const r=await fetch(`${API}${path}`,{...init,cache:'no-store',headers:{'Content-Type':'application/json',...(init?.headers||{})}}); if(!r.ok) throw new Error(await r.text()); return r.status===204?null:r.json();}
+export const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:8000';
+export async function api(path: string, init: RequestInit = {}) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const res = await fetch(`${API_URL}${path}`, { cache: 'no-store', ...init, headers: { 'Content-Type': 'application/json', ...(token ? {Authorization: `Bearer ${token}`} : {}), ...(init.headers || {}) }});
+  if (!res.ok) throw new Error(await res.text());
+  if (res.status === 204) return null;
+  return res.json();
+}
